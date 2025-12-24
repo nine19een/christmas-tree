@@ -23,20 +23,7 @@ export const useStore = create<AppState>((set) => ({
   mode: AppMode.TREE,
   gesture: HandGesture.NONE,
   handPosition: { x: 0.5, y: 0.5 },
-  photos: [
-    {
-       id: 'default1',
-       url: 'https://picsum.photos/400/400?random=1',
-       treePos: [0.5, 2, 0.5],
-       explodedPos: [2, 1, 2]
-    },
-    {
-       id: 'default2',
-       url: 'https://picsum.photos/400/400?random=2',
-       treePos: [-0.5, 1, 0.5],
-       explodedPos: [-2, -1, 3]
-    }
-  ],
+  photos: [],
   focusedPhotoIndex: 0,
   isAiReady: false,
 
