@@ -1,8 +1,7 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Environment, OrbitControls, Stars } from '@react-three/drei';
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
-import * as THREE from 'three';
 import MagicTree from './MagicTree';
 
 declare global {
@@ -17,61 +16,104 @@ declare global {
 }
 
 const Scene: React.FC = () => {
+  const [canvasInfo, setCanvasInfo] = useState({
+    exists: false,
+    width: 0,
+    height: 0,
+    top: 0,
+    left: 0,
+  });
+
+  useEffect(() => {
+    const updateCanvasInfo = () => {
+      const canvas = document.querySelector('canvas');
+      if (!canvas) {
+        setCanvasInfo({ exists: false, width: 0, height: 0, top: 0, left: 0 });
+        return;
+      }
+
+      const rect = canvas.getBoundingClientRect();
+      setCanvasInfo({
+        exists: true,
+        width: Math.round(rect.width),
+        height: Math.round(rect.height),
+        top: Math.round(rect.top),
+        left: Math.round(rect.left),
+      });
+    };
+
+    updateCanvasInfo();
+    const intervalId = window.setInterval(updateCanvasInfo, 1000);
+    return () => window.clearInterval(intervalId);
+  }, []);
+
   return (
-    <Canvas
-      camera={{ position: [0, 0, 14], fov: 45 }}
-      dpr={[1, 2]}
-      gl={{ 
-        antialias: false, 
-        toneMapping: THREE.ACESFilmicToneMapping, 
-        toneMappingExposure: 1.0 
-      }}
-    >
-      <color attach="background" args={['#020504']} />
-      
-      {/* --- Cinematic Lighting Setup --- */}
-      
-      {/* 1. Base Ambient: Deep Blue/Green Night fill */}
-      <ambientLight intensity={0.6} color="#112233" />
+    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+      <Canvas
+        camera={{ position: [0, 0.5, 15], fov: 45 }}
+        dpr={[1, 2]} // Optimize for high DPI
+        gl={{ antialias: false, toneMappingExposure: 1.5 }}
+      >
+        <color attach="background" args={['#02030d']} />
 
-      {/* 2. Key Light: Warm Spotlight from top-right */}
-      <spotLight 
-        position={[10, 15, 10]} 
-        angle={0.4} 
-        penumbra={0.5} 
-        intensity={100} 
-        color="#ffeebb" 
-        castShadow 
-        distance={40}
-        decay={1.5}
-      />
-
-      {/* 3. Rim Light: Cool blue backlight to outline the tree */}
-      <pointLight position={[-8, 5, -8]} intensity={40} color="#4466ff" distance={20} decay={1.5} />
-      
-      {/* 4. Ground Bounce: Warm low fill */}
-      <pointLight position={[0, -8, 5]} intensity={10} color="#aa7744" distance={15} decay={2} />
-
-      <Stars radius={80} depth={20} count={3000} factor={3} saturation={0} fade speed={0.5} />
-
-      <Suspense fallback={null}>
-         <Environment preset="night" blur={0.7} background={false} />
-         <MagicTree />
-      </Suspense>
-
-      <EffectComposer enableNormalPass={false}>
-        {/* Bloom: High threshold so only emissive lights and star glow, not the leaves */}
-        <Bloom 
-            luminanceThreshold={1.1} 
-            mipmapBlur 
-            intensity={0.8} 
-            radius={0.3} 
+        {/* Lighting */}
+        <ambientLight intensity={0.2} />
+        <pointLight position={[10, 10, 10]} intensity={1} color="#FFD700" />
+        <pointLight position={[-10, -10, -10]} intensity={0.5} color="#B01B2E" />
+        <spotLight 
+          position={[0, 15, 0]} 
+          angle={0.3} 
+          penumbra={1} 
+          intensity={2} 
+          castShadow 
+          color="#FFF" 
         />
-        <Vignette eskil={false} offset={0.1} darkness={0.8} />
-      </EffectComposer>
-      
-      <OrbitControls enableZoom={false} enablePan={false} />
-    </Canvas>
+
+        <Stars radius={200} depth={140} count={16000} factor={1.9} saturation={0.35} fade speed={0.2} />
+
+        <Suspense fallback={null}>
+           <Environment preset="night" />
+           <MagicTree />
+        </Suspense>
+
+        {/* Post Processing for the "Cinematic Glow" */}
+        <EffectComposer disableNormalPass>
+          <Bloom 
+              luminanceThreshold={0.2} 
+              mipmapBlur 
+              intensity={1.5} 
+              radius={0.6}
+          />
+          <Vignette eskil={false} offset={0.1} darkness={1.1} />
+        </EffectComposer>
+        
+        {/* Fallback control if hand tracking is confusing */}
+        <OrbitControls enableZoom={false} enablePan={false} />
+      </Canvas>
+
+      <div
+        style={{
+          position: 'absolute',
+          top: 8,
+          right: 8,
+          zIndex: 50,
+          color: '#ffffff',
+          background: 'rgba(0, 0, 0, 0.6)',
+          padding: '8px 10px',
+          borderRadius: 6,
+          fontFamily: 'monospace',
+          fontSize: 12,
+          pointerEvents: 'none',
+        }}
+      >
+        <div>Scene mounted</div>
+        <div>canvas exists: {canvasInfo.exists ? 'true' : 'false'}</div>
+        <div>
+          canvas rect: {canvasInfo.width}x{canvasInfo.height} @ {canvasInfo.left},{' '}
+          {canvasInfo.top}
+        </div>
+      </div>
+    </div>
   );
 };
 
