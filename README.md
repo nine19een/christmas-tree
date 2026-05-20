@@ -4,6 +4,8 @@ An interactive browser experience that combines 3D real-time rendering, hand ges
 
 一个融合了 3D 实时渲染、手势识别与照片叙事的浏览器交互项目。用户可上传照片，通过手势切换场景状态，并在沉浸式节日氛围中进行视觉聚焦。
 
+![picture](tree.jpg)
+
 ---
 
 ## 🎬 Demo / 演示
